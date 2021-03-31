@@ -78,14 +78,14 @@ public class Sample {
         };
     }
 
-    private static long runQuery(DSLContext session, Function<DSLContext, Long> fn) {
-        return fn.apply(session);
+    private static long runQuery(DSLContext ctx, Function<DSLContext, Long> fn) {
+        return fn.apply(ctx);
     }
 
     // Run SQL code in a way that automatically handles the
     // transaction retry logic so we don't have to duplicate it in
     // various places.
-    private static long runTransaction(DSLContext session, Function<DSLContext, Long> fn) {
+    private static long runTransaction(DSLContext ctx, Function<DSLContext, Long> fn) {
         AtomicLong rv = new AtomicLong(0L);
         AtomicInteger attemptCount = new AtomicInteger(0);
 
@@ -96,7 +96,7 @@ public class Sample {
                 log.debug("APP: Entering retry loop again, iteration {}", attemptCount.get());
             }
 
-            if (session.connectionResult(connection -> {
+            if (ctx.connectionResult(connection -> {
                 connection.setAutoCommit(false);
                 log.trace("APP: BEGIN;");
 
@@ -106,7 +106,7 @@ public class Sample {
                 }
 
                 try {
-                    rv.set(fn.apply(session));
+                    rv.set(fn.apply(ctx));
                     if (rv.get() != -1) {
                         connection.commit();
                         log.trace("APP: COMMIT;");
@@ -148,6 +148,14 @@ public class Sample {
 
     public static void main(String[] args) throws Exception {
 
+        SQLDialect dialect = SQLDialect.POSTGRES;
+
+        try {
+            dialect = SQLDialect.valueOf("COCKROACHDB");
+        } catch (IllegalArgumentException ex) {
+            log.warn("CockroachDB Dialect is not available in the opensource version of Jooq.  You must download and install a commercial version.  Falling back to Postgres.");
+        }
+
         HikariConfig config = new HikariConfig();
         config.setJdbcUrl("jdbc:postgresql://localhost:26257/bank?ApplicationName=JooqBank&reWriteBatchedInserts=true&sslmode=require&sslfactory=org.postgresql.ssl.NonValidatingFactory&sslfactoryarg=classpath:certs/ca.crt");
         config.setUsername("maxroach");
@@ -163,7 +171,8 @@ public class Sample {
             accountsRecords.add(new AccountsRecord(UUID.randomUUID(), 1000L));
         }
 
-        DSLContext ctx = DSL.using(dataSource, SQLDialect.COCKROACHDB, new Settings()
+
+        DSLContext ctx = DSL.using(dataSource, dialect, new Settings()
                 .withExecuteLogging(true)
                 .withRenderQuotedNames(RenderQuotedNames.NEVER));
 

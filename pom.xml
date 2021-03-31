@@ -36,17 +36,17 @@
             <version>3.4.5</version>
         </dependency>
         <dependency>
-            <groupId>org.jooq.trial-java-8</groupId>
+            <groupId>org.jooq</groupId>
             <artifactId>jooq</artifactId>
             <version>${jooq.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.jooq.trial-java-8</groupId>
+            <groupId>org.jooq</groupId>
             <artifactId>jooq-meta</artifactId>
             <version>${jooq.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.jooq.trial-java-8</groupId>
+            <groupId>org.jooq</groupId>
             <artifactId>jooq-codegen</artifactId>
             <version>${jooq.version}</version>
         </dependency>
@@ -67,9 +67,7 @@
                         <configuration>
                             <archive>
                                 <manifest>
-                                    <mainClass>
-                                        com.cockroachlabs.example.Sample
-                                    </mainClass>
+                                    <mainClass>com.cockroachlabs.example.Sample</mainClass>
                                 </manifest>
                             </archive>
                             <descriptorRefs>
@@ -91,7 +89,7 @@
 
                      Note: Only the Open Source Edition is hosted on Maven Central.
                            Import the others manually from your distribution -->
-                <groupId>org.jooq.trial-java-8</groupId>
+                <groupId>org.jooq</groupId>
                 <artifactId>jooq-codegen-maven</artifactId>
                 <version>${jooq.version}</version>
 
@@ -121,7 +119,6 @@
                         <database>
                             <name>org.jooq.meta.cockroachdb.CockroachDBDatabase</name>
                             <includes>.*</includes>
-                            <excludes></excludes>
                             <inputSchema>public</inputSchema>
                         </database>
                         <target>
