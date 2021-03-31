@@ -78,6 +78,10 @@ public class Sample {
         };
     }
 
+    private static long runQuery(DSLContext session, Function<DSLContext, Long> fn) {
+        return fn.apply(session);
+    }
+
     // Run SQL code in a way that automatically handles the
     // transaction retry logic so we don't have to duplicate it in
     // various places.
@@ -188,8 +192,8 @@ public class Sample {
                 // Success!
                 log.trace("APP: transferFunds({}, {}, {}) --> {} ", fromRandom.toString(), toRandom.toString(), transferAmount, transferResult);
 
-                long fromBalanceAfter = runTransaction(ctx, getAccountBalance(fromRandom));
-                long toBalanceAfter = runTransaction(ctx, getAccountBalance(toRandom));
+                long fromBalanceAfter = runQuery(ctx, getAccountBalance(fromRandom));
+                long toBalanceAfter = runQuery(ctx, getAccountBalance(toRandom));
                 if (fromBalanceAfter != -1 && toBalanceAfter != -1) {
                     // Success!
                     log.trace("APP: getAccountBalance({}) --> {}", fromRandom.toString(), fromBalanceAfter);
