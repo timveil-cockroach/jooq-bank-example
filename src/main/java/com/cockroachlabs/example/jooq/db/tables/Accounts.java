@@ -4,12 +4,13 @@
 package com.cockroachlabs.example.jooq.db.tables;
 
 
-import com.cockroachlabs.example.jooq.db.DefaultSchema;
 import com.cockroachlabs.example.jooq.db.Keys;
+import com.cockroachlabs.example.jooq.db.Public;
 import com.cockroachlabs.example.jooq.db.tables.records.AccountsRecord;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 import org.jooq.Field;
 import org.jooq.ForeignKey;
@@ -22,6 +23,7 @@ import org.jooq.TableField;
 import org.jooq.TableOptions;
 import org.jooq.UniqueKey;
 import org.jooq.impl.DSL;
+import org.jooq.impl.SQLDataType;
 import org.jooq.impl.TableImpl;
 
 
@@ -31,10 +33,10 @@ import org.jooq.impl.TableImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Accounts extends TableImpl<AccountsRecord> {
 
-    private static final long serialVersionUID = 1371044196;
+    private static final long serialVersionUID = 1L;
 
     /**
-     * The reference instance of <code>ACCOUNTS</code>
+     * The reference instance of <code>public.accounts</code>
      */
     public static final Accounts ACCOUNTS = new Accounts();
 
@@ -47,35 +49,14 @@ public class Accounts extends TableImpl<AccountsRecord> {
     }
 
     /**
-     * The column <code>ACCOUNTS.ID</code>.
+     * The column <code>public.accounts.id</code>.
      */
-    public final TableField<AccountsRecord, Long> ID = createField(DSL.name("ID"), org.jooq.impl.SQLDataType.BIGINT.nullable(false), this, "");
+    public final TableField<AccountsRecord, UUID> ID = createField(DSL.name("id"), SQLDataType.UUID.nullable(false), this, "");
 
     /**
-     * The column <code>ACCOUNTS.BALANCE</code>.
+     * The column <code>public.accounts.balance</code>.
      */
-    public final TableField<AccountsRecord, Long> BALANCE = createField(DSL.name("BALANCE"), org.jooq.impl.SQLDataType.BIGINT.nullable(false), this, "");
-
-    /**
-     * Create a <code>ACCOUNTS</code> table reference
-     */
-    public Accounts() {
-        this(DSL.name("ACCOUNTS"), null);
-    }
-
-    /**
-     * Create an aliased <code>ACCOUNTS</code> table reference
-     */
-    public Accounts(String alias) {
-        this(DSL.name(alias), ACCOUNTS);
-    }
-
-    /**
-     * Create an aliased <code>ACCOUNTS</code> table reference
-     */
-    public Accounts(Name alias) {
-        this(alias, ACCOUNTS);
-    }
+    public final TableField<AccountsRecord, Long> BALANCE = createField(DSL.name("balance"), SQLDataType.BIGINT.nullable(false), this, "");
 
     private Accounts(Name alias, Table<AccountsRecord> aliased) {
         this(alias, aliased, null);
@@ -85,23 +66,44 @@ public class Accounts extends TableImpl<AccountsRecord> {
         super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.table());
     }
 
+    /**
+     * Create an aliased <code>public.accounts</code> table reference
+     */
+    public Accounts(String alias) {
+        this(DSL.name(alias), ACCOUNTS);
+    }
+
+    /**
+     * Create an aliased <code>public.accounts</code> table reference
+     */
+    public Accounts(Name alias) {
+        this(alias, ACCOUNTS);
+    }
+
+    /**
+     * Create a <code>public.accounts</code> table reference
+     */
+    public Accounts() {
+        this(DSL.name("accounts"), null);
+    }
+
     public <O extends Record> Accounts(Table<O> child, ForeignKey<O, AccountsRecord> key) {
         super(child, key, ACCOUNTS);
     }
 
     @Override
     public Schema getSchema() {
-        return DefaultSchema.DEFAULT_SCHEMA;
+        return Public.PUBLIC;
     }
 
     @Override
     public UniqueKey<AccountsRecord> getPrimaryKey() {
-        return Keys.ACCOUNTS_PK;
+        return Keys.ACCOUNTS__PRIMARY;
     }
 
     @Override
     public List<UniqueKey<AccountsRecord>> getKeys() {
-        return Arrays.<UniqueKey<AccountsRecord>>asList(Keys.ACCOUNTS_PK);
+        return Arrays.<UniqueKey<AccountsRecord>>asList(Keys.ACCOUNTS__PRIMARY);
     }
 
     @Override
@@ -135,7 +137,7 @@ public class Accounts extends TableImpl<AccountsRecord> {
     // -------------------------------------------------------------------------
 
     @Override
-    public Row2<Long, Long> fieldsRow() {
+    public Row2<UUID, Long> fieldsRow() {
         return (Row2) super.fieldsRow();
     }
 }

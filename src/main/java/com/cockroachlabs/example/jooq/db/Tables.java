@@ -8,13 +8,13 @@ import com.cockroachlabs.example.jooq.db.tables.Accounts;
 
 
 /**
- * Convenience access to all tables in 
+ * Convenience access to all tables in public.
  */
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Tables {
 
     /**
-     * The table <code>ACCOUNTS</code>.
+     * The table <code>public.accounts</code>.
      */
     public static final Accounts ACCOUNTS = Accounts.ACCOUNTS;
 }

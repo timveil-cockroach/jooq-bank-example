@@ -19,7 +19,7 @@ services:
     container_name: roach-0
     hostname: roach-0.crdb.io
     image: cockroachdb/cockroach:latest
-    command: start --cluster-name=example-secure --logtostderr=WARNING --log-file-verbosity=WARNING --certs-dir=/certs --listen-addr=roach-0.crdb.io:26257 --advertise-addr=roach-0.crdb.io:26257 --join=roach-0.crdb.io
+    command: start --cluster-name=jooq-bank --logtostderr=WARNING --log-file-verbosity=WARNING --certs-dir=/certs --listen-addr=roach-0.crdb.io:26257 --advertise-addr=roach-0.crdb.io:26257 --join=roach-0.crdb.io
     volumes:
       - certs:/certs:ro
     depends_on:
@@ -29,7 +29,7 @@ services:
     container_name: roach-1
     hostname: roach-1.crdb.io
     image: cockroachdb/cockroach:latest
-    command: start --cluster-name=example-secure --logtostderr=WARNING --log-file-verbosity=WARNING --certs-dir=/certs --listen-addr=roach-1.crdb.io:26257 --advertise-addr=roach-1.crdb.io:26257 --join=roach-0.crdb.io
+    command: start --cluster-name=jooq-bank --logtostderr=WARNING --log-file-verbosity=WARNING --certs-dir=/certs --listen-addr=roach-1.crdb.io:26257 --advertise-addr=roach-1.crdb.io:26257 --join=roach-0.crdb.io
     volumes:
       - certs:/certs:ro
     depends_on:
@@ -40,7 +40,7 @@ services:
     container_name: roach-2
     hostname: roach-2.crdb.io
     image: cockroachdb/cockroach:latest
-    command: start --cluster-name=example-secure --logtostderr=WARNING --log-file-verbosity=WARNING --certs-dir=/certs --listen-addr=roach-2.crdb.io:26257 --advertise-addr=roach-2.crdb.io:26257 --join=roach-0.crdb.io
+    command: start --cluster-name=jooq-bank --logtostderr=WARNING --log-file-verbosity=WARNING --certs-dir=/certs --listen-addr=roach-2.crdb.io:26257 --advertise-addr=roach-2.crdb.io:26257 --join=roach-0.crdb.io
     volumes:
       - certs:/certs:ro
     depends_on:

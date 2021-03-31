@@ -21,6 +21,16 @@
             <version>42.2.19</version>
         </dependency>
         <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.12.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>1.7.30</version>
+        </dependency>
+        <dependency>
             <groupId>org.jooq.trial-java-8</groupId>
             <artifactId>jooq</artifactId>
             <version>${jooq.version}</version>
@@ -107,9 +117,6 @@
                             <name>org.jooq.meta.cockroachdb.CockroachDBDatabase</name>
                             <includes>.*</includes>
                             <excludes></excludes>
-                            <!-- In case your database supports catalogs, e.g. SQL Server:
-                            <inputCatalog>public</inputCatalog>
-                              -->
                             <inputSchema>public</inputSchema>
                         </database>
                         <target>
