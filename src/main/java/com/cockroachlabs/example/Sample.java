@@ -11,12 +11,10 @@ import org.jooq.impl.DSL;
 import org.postgresql.ds.PGSimpleDataSource;
 import org.postgresql.ssl.NonValidatingFactory;
 
-import javax.sql.DataSource;
 import java.io.InputStream;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
@@ -165,8 +163,6 @@ public class Sample {
     }
 
     public static void main(String[] args) throws Exception {
-
-        //sslfactory=org.postgresql.ssl.SingleCertValidatingFactory&sslfactoryarg=classpath:cert/rds-ca-cert_name.p12
 
         PGSimpleDataSource ds = new PGSimpleDataSource();
         ds.setServerNames(new String[]{"localhost"});
