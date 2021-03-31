@@ -1,8 +1,6 @@
 drop table if exists accounts;
 
 create table accounts (
-  id bigint not null,
+  id uuid PRIMARY KEY,
   balance bigint not null,
-
-  constraint accounts_pk primary key (id)
 );
