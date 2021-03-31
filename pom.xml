@@ -96,6 +96,7 @@
                 <!-- The plugin should hook into the generate goal -->
                 <executions>
                     <execution>
+                        <phase>package</phase>
                         <goals>
                             <goal>generate</goal>
                         </goals>
