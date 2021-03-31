@@ -31,6 +31,11 @@
             <version>1.7.30</version>
         </dependency>
         <dependency>
+            <groupId>com.zaxxer</groupId>
+            <artifactId>HikariCP</artifactId>
+            <version>3.4.5</version>
+        </dependency>
+        <dependency>
             <groupId>org.jooq.trial-java-8</groupId>
             <artifactId>jooq</artifactId>
             <version>${jooq.version}</version>

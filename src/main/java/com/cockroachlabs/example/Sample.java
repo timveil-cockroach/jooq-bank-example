@@ -1,6 +1,8 @@
 package com.cockroachlabs.example;
 
 import com.cockroachlabs.example.jooq.db.tables.records.AccountsRecord;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 import org.apache.commons.lang3.time.StopWatch;
 import org.jooq.DSLContext;
 import org.jooq.SQLDialect;
@@ -9,13 +11,10 @@ import org.jooq.conf.RenderQuotedNames;
 import org.jooq.conf.Settings;
 import org.jooq.exception.DataAccessException;
 import org.jooq.impl.DSL;
-import org.postgresql.ds.PGSimpleDataSource;
-import org.postgresql.ssl.NonValidatingFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,7 +34,7 @@ public class Sample {
     private static final Random RAND = new Random();
     private static final String RETRY_SQL_STATE = "40001";
     private static final int MAX_ATTEMPT_COUNT = 6;
-    private static final int ACCOUNTS_SIZE = 1000;
+    private static final int ACCOUNTS_SIZE = 10000;
 
     private static Function<DSLContext, Long> addAccounts(List<AccountsRecord> accountsRecords) {
         return ctx -> {
@@ -145,18 +144,12 @@ public class Sample {
 
     public static void main(String[] args) throws Exception {
 
-        PGSimpleDataSource ds = new PGSimpleDataSource();
-        ds.setServerNames(new String[]{"localhost"});
-        ds.setPortNumbers(new int[]{26257});
-        ds.setDatabaseName("bank");
-        ds.setUser("maxroach");
-        ds.setPassword("password");
-        ds.setSsl(true);
-        ds.setSslMode("require");
-        ds.setSslfactory(NonValidatingFactory.class.getName());
-        ds.setSslFactoryArg("classpath:certs/ca.crt");
-        ds.setReWriteBatchedInserts(true);
-        ds.setApplicationName("JooqBank");
+        HikariConfig config = new HikariConfig();
+        config.setJdbcUrl("jdbc:postgresql://localhost:26257/bank?ApplicationName=JooqBank&reWriteBatchedInserts=true&sslmode=require&sslfactory=org.postgresql.ssl.NonValidatingFactory&sslfactoryarg=classpath:certs/ca.crt");
+        config.setUsername("maxroach");
+        config.setPassword("password");
+
+        HikariDataSource dataSource = new HikariDataSource(config);
 
         List<AccountsRecord> accountsRecords = new ArrayList<>();
 
@@ -166,50 +159,49 @@ public class Sample {
             accountsRecords.add(new AccountsRecord(UUID.randomUUID(), 1000L));
         }
 
-        try (Connection connection = ds.getConnection()) {
-            DSLContext ctx = DSL.using(connection, SQLDialect.COCKROACHDB, new Settings()
-                    .withExecuteLogging(true)
-                    .withRenderQuotedNames(RenderQuotedNames.NEVER));
+        DSLContext ctx = DSL.using(dataSource, SQLDialect.COCKROACHDB, new Settings()
+                .withExecuteLogging(true)
+                .withRenderQuotedNames(RenderQuotedNames.NEVER));
 
-            try (InputStream in = Sample.class.getResourceAsStream("/db.sql")) {
-                ctx.parser().parse(Source.of(in).readString()).executeBatch();
-            }
-
-
-            stopWatch.start();
-            runTransaction(ctx, addAccounts(accountsRecords));
-            stopWatch.stop();
+        try (InputStream in = Sample.class.getResourceAsStream("/db.sql")) {
+            ctx.parser().parse(Source.of(in).readString()).executeBatch();
+        }
 
 
-            log.info("inserted {} accounts in  {} ms", accountsRecords.size(), stopWatch.getTime(TimeUnit.MILLISECONDS));
+        stopWatch.start();
+        runTransaction(ctx, addAccounts(accountsRecords));
+        stopWatch.stop();
 
-            long transferAmount = 100;
 
-            stopWatch.reset();
-            stopWatch.start();
-            for (int i = 0; i < accountsRecords.size(); i++) {
+        log.info("inserted {} accounts in  {} ms", accountsRecords.size(), stopWatch.getTime(TimeUnit.MILLISECONDS));
 
-                UUID fromRandom = accountsRecords.get(RAND.nextInt(accountsRecords.size())).getId();
-                UUID toRandom = accountsRecords.get(RAND.nextInt(accountsRecords.size())).getId();
-                long transferResult = runTransaction(ctx, transferFunds(fromRandom, toRandom, transferAmount));
-                if (transferResult != -1) {
+        long transferAmount = 100;
+
+        stopWatch.reset();
+        stopWatch.start();
+        for (int i = 0; i < accountsRecords.size(); i++) {
+
+            UUID fromRandom = accountsRecords.get(RAND.nextInt(accountsRecords.size())).getId();
+            UUID toRandom = accountsRecords.get(RAND.nextInt(accountsRecords.size())).getId();
+            long transferResult = runTransaction(ctx, transferFunds(fromRandom, toRandom, transferAmount));
+            if (transferResult != -1) {
+                // Success!
+                log.trace("APP: transferFunds({}, {}, {}) --> {} ", fromRandom.toString(), toRandom.toString(), transferAmount, transferResult);
+
+                long fromBalanceAfter = runTransaction(ctx, getAccountBalance(fromRandom));
+                long toBalanceAfter = runTransaction(ctx, getAccountBalance(toRandom));
+                if (fromBalanceAfter != -1 && toBalanceAfter != -1) {
                     // Success!
-                    log.trace("APP: transferFunds({}, {}, {}) --> {} ", fromRandom.toString(), toRandom.toString(), transferAmount, transferResult);
-
-                    long fromBalanceAfter = runTransaction(ctx, getAccountBalance(fromRandom));
-                    long toBalanceAfter = runTransaction(ctx, getAccountBalance(toRandom));
-                    if (fromBalanceAfter != -1 && toBalanceAfter != -1) {
-                        // Success!
-                        log.trace("APP: getAccountBalance({}) --> {}", fromRandom.toString(), fromBalanceAfter);
-                        log.trace("APP: getAccountBalance({}) --> {}", toRandom.toString(), toBalanceAfter);
-                    }
+                    log.trace("APP: getAccountBalance({}) --> {}", fromRandom.toString(), fromBalanceAfter);
+                    log.trace("APP: getAccountBalance({}) --> {}", toRandom.toString(), toBalanceAfter);
                 }
             }
-            stopWatch.stop();
-
-            long totalTransactionTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
-            log.info("completed {} business transactions in {} ms or {} s; avg per transaction = {} ms", accountsRecords.size(), totalTransactionTime, stopWatch.getTime(TimeUnit.SECONDS), (totalTransactionTime/ACCOUNTS_SIZE));
-
         }
+        stopWatch.stop();
+
+        long totalTransactionTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+        log.info("completed {} business transactions in {} ms or {} s; avg per transaction = {} ms", accountsRecords.size(), totalTransactionTime, stopWatch.getTime(TimeUnit.SECONDS), (totalTransactionTime / ACCOUNTS_SIZE));
+
+
     }
 }
