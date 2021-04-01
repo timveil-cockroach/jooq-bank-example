@@ -34,7 +34,7 @@ public class Sample {
     private static final Random RAND = new Random();
     private static final String RETRY_SQL_STATE = "40001";
     private static final int MAX_ATTEMPT_COUNT = 6;
-    private static final int ACCOUNTS_SIZE = 10000;
+    private static final int ACCOUNTS_SIZE = 1024;
 
     private static Function<DSLContext, Long> addAccounts(List<AccountsRecord> accountsRecords) {
         return ctx -> {
