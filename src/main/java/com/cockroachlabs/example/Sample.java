@@ -106,7 +106,7 @@ public class Sample {
                 }
 
                 try {
-                    rv.set(fn.apply(ctx));
+                    rv.set(fn.apply(DSL.using(connection)));
                     if (rv.get() != -1) {
                         connection.commit();
                         log.trace("APP: COMMIT;");
@@ -135,6 +135,8 @@ public class Sample {
                     } else {
                         throw e;
                     }
+                } finally {
+                    connection.setAutoCommit(true);
                 }
 
                 return false;
