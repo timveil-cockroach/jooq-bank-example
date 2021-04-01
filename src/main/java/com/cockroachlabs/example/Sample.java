@@ -4,7 +4,9 @@ import com.cockroachlabs.example.jooq.db.tables.records.AccountsRecord;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.apache.commons.lang3.time.StopWatch;
-import org.jooq.*;
+import org.jooq.DSLContext;
+import org.jooq.SQLDialect;
+import org.jooq.Source;
 import org.jooq.conf.RenderQuotedNames;
 import org.jooq.conf.Settings;
 import org.jooq.impl.DSL;
@@ -26,8 +28,6 @@ public class Sample {
     private static final Logger log = LoggerFactory.getLogger(Sample.class);
 
     private static final Random RAND = new Random();
-    private static final String RETRY_SQL_STATE = "40001";
-    private static final int MAX_ATTEMPT_COUNT = 6;
     private static final int ACCOUNTS_SIZE = 1024;
 
     private static Function<DSLContext, Long> addAccounts(List<AccountsRecord> accountsRecords) {
