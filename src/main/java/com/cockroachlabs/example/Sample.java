@@ -163,60 +163,59 @@ public class Sample {
         config.setUsername("maxroach");
         config.setPassword("password");
 
-        HikariDataSource dataSource = new HikariDataSource(config);
+        try (HikariDataSource dataSource = new HikariDataSource(config)) {
 
-        List<AccountsRecord> accountsRecords = new ArrayList<>();
+            List<AccountsRecord> accountsRecords = new ArrayList<>();
 
-        StopWatch stopWatch = new StopWatch();
+            StopWatch stopWatch = new StopWatch();
 
-        for (int i = 0; i < ACCOUNTS_SIZE; i++) {
-            accountsRecords.add(new AccountsRecord(UUID.randomUUID(), 1000L));
-        }
-
-
-        DSLContext ctx = DSL.using(dataSource, dialect, new Settings()
-                .withExecuteLogging(true)
-                .withRenderQuotedNames(RenderQuotedNames.NEVER));
-
-        try (InputStream in = Sample.class.getResourceAsStream("/db.sql")) {
-            ctx.parser().parse(Source.of(in).readString()).executeBatch();
-        }
+            for (int i = 0; i < ACCOUNTS_SIZE; i++) {
+                accountsRecords.add(new AccountsRecord(UUID.randomUUID(), 1000L));
+            }
 
 
-        stopWatch.start();
-        runTransaction(ctx, addAccounts(accountsRecords));
-        stopWatch.stop();
+            DSLContext ctx = DSL.using(dataSource, dialect, new Settings()
+                    .withExecuteLogging(true)
+                    .withRenderQuotedNames(RenderQuotedNames.NEVER));
+
+            try (InputStream in = Sample.class.getResourceAsStream("/db.sql")) {
+                ctx.parser().parse(Source.of(in).readString()).executeBatch();
+            }
 
 
-        log.info("inserted {} accounts in  {} ms", accountsRecords.size(), stopWatch.getTime(TimeUnit.MILLISECONDS));
+            stopWatch.start();
+            runTransaction(ctx, addAccounts(accountsRecords));
+            stopWatch.stop();
 
-        long transferAmount = 100;
 
-        stopWatch.reset();
-        stopWatch.start();
-        for (int i = 0; i < accountsRecords.size(); i++) {
+            log.info("inserted {} accounts in  {} ms", accountsRecords.size(), stopWatch.getTime(TimeUnit.MILLISECONDS));
 
-            UUID fromRandom = accountsRecords.get(RAND.nextInt(accountsRecords.size())).getId();
-            UUID toRandom = accountsRecords.get(RAND.nextInt(accountsRecords.size())).getId();
-            long transferResult = runTransaction(ctx, transferFunds(fromRandom, toRandom, transferAmount));
-            if (transferResult != -1) {
-                // Success!
-                log.trace("APP: transferFunds({}, {}, {}) --> {} ", fromRandom.toString(), toRandom.toString(), transferAmount, transferResult);
+            long transferAmount = 100;
 
-                long fromBalanceAfter = runQuery(ctx, getAccountBalance(fromRandom));
-                long toBalanceAfter = runQuery(ctx, getAccountBalance(toRandom));
-                if (fromBalanceAfter != -1 && toBalanceAfter != -1) {
+            stopWatch.reset();
+            stopWatch.start();
+            for (int i = 0; i < accountsRecords.size(); i++) {
+
+                UUID fromRandom = accountsRecords.get(RAND.nextInt(accountsRecords.size())).getId();
+                UUID toRandom = accountsRecords.get(RAND.nextInt(accountsRecords.size())).getId();
+                long transferResult = runTransaction(ctx, transferFunds(fromRandom, toRandom, transferAmount));
+                if (transferResult != -1) {
                     // Success!
-                    log.trace("APP: getAccountBalance({}) --> {}", fromRandom.toString(), fromBalanceAfter);
-                    log.trace("APP: getAccountBalance({}) --> {}", toRandom.toString(), toBalanceAfter);
+                    log.trace("APP: transferFunds({}, {}, {}) --> {} ", fromRandom.toString(), toRandom.toString(), transferAmount, transferResult);
+
+                    long fromBalanceAfter = runQuery(ctx, getAccountBalance(fromRandom));
+                    long toBalanceAfter = runQuery(ctx, getAccountBalance(toRandom));
+                    if (fromBalanceAfter != -1 && toBalanceAfter != -1) {
+                        // Success!
+                        log.trace("APP: getAccountBalance({}) --> {}", fromRandom.toString(), fromBalanceAfter);
+                        log.trace("APP: getAccountBalance({}) --> {}", toRandom.toString(), toBalanceAfter);
+                    }
                 }
             }
+            stopWatch.stop();
+
+            long totalTransactionTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
+            log.info("completed {} business transactions in {} ms or {} s; avg per transaction = {} ms", accountsRecords.size(), totalTransactionTime, stopWatch.getTime(TimeUnit.SECONDS), (totalTransactionTime / ACCOUNTS_SIZE));
         }
-        stopWatch.stop();
-
-        long totalTransactionTime = stopWatch.getTime(TimeUnit.MILLISECONDS);
-        log.info("completed {} business transactions in {} ms or {} s; avg per transaction = {} ms", accountsRecords.size(), totalTransactionTime, stopWatch.getTime(TimeUnit.SECONDS), (totalTransactionTime / ACCOUNTS_SIZE));
-
-
     }
 }
